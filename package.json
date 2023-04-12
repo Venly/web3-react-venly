@@ -20,6 +20,12 @@
     "build": "tsc",
     "start": "tsc --watch"
   },
+  "author": "David Fu <david.fu@venly.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ArkaneNetwork/web3-react-venly/issues"
+  },
+  "homepage": "https://venly.io",
   "dependencies": {
     "@venly/web3-provider": "^3.0.0-develop.5",
     "@web3-react/types": "^8.1.2-beta.0"
