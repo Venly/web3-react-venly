@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Initialize env') {
             steps {
-                sh "git config --global user.email \"jenkins@arkane.network\""
+                sh "git config --global user.email \"jenkins@venly.io\""
                 sh "git config --global user.name \"Jenkins\""
                 withCredentials([gitUsernamePassword(credentialsId: 'GITHUB_CRED', gitToolName: 'Default')]) {
                     sh 'git fetch -p'
