@@ -37,13 +37,13 @@ pipeline {
                     branch 'develop'
                     branch 'hotfix-*'
                     branch 'release-*'
-                    branch 'master'
+                    branch 'main'
                 }
             }
             steps {
                 sh "printf '//registry.npmjs.org/:_authToken=' > .npmrc && printf '${NPM_KEY}' >> .npmrc"
                 script {
-                    if (env.BRANCH_NAME == 'master') {
+                    if (env.BRANCH_NAME == 'main') {
                         sh 'npm publish'
                     } else {
                         sh 'npm publish --tag ${BRANCH_NAME}'
