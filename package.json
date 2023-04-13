@@ -1,6 +1,6 @@
 {
   "name": "@venly/web3-react-venly",
-  "version": "1.1.1-develop.7",
+  "version": "1.1.1-develop.8",
   "description": "Venly connector for Web3-React",
   "type": "commonjs",
   "types": "./dist/index.d.ts",
