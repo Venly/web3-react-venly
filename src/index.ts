@@ -37,7 +37,7 @@ export class Venly extends Connector {
   private async isomorphicInitialize(): Promise<void> {
     if (this.eagerConnection) return;
 
-    await (this.eagerConnection = this.Venly.createProviderEngine(this.options).then((provider) => {
+    await (this.eagerConnection = this.Venly.createProvider(this.options).then((provider) => {
       this.provider = provider;
 
       this.provider.on('connect', ({ chainId }: ProviderConnectInfo): void => {
