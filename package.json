@@ -27,7 +27,7 @@
   },
   "homepage": "https://venly.io",
   "dependencies": {
-    "@venly/web3-provider": "^3.0.0-develop.5",
+    "@venly/web3-provider": "^3.1.0",
     "@web3-react/types": "^8.1.2-beta.0"
   },
   "devDependencies": {
