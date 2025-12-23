@@ -36,5 +36,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "overrides": {
+    "semver": "^7.5.2"
+  }
 }
