@@ -1,0 +1,51 @@
+name: 🔖 Bump Build Version
+description: "Bump Build Version"
+
+inputs:
+  token:
+    description: GitHub token for authentication
+    required: true
+
+outputs:
+  new_version:
+    description: "Bumped Version"
+    value: ${{ steps.bump_version.outputs.new_version }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: oleksiyrudenko/gha-git-credentials@v2.1.1
+      with:
+        global: false
+        name: ${{ github.actor }}
+        email: ${{ github.actor }}@venly.io
+        actor: ${{ github.actor }}
+        token: ${{ inputs.token }}
+
+    - name: 🔖 Bump Version
+      id: bump_version
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        new_version=$(npm version prerelease --preid=develop --git-tag-version=false)
+        new_version=${new_version#v}
+        echo "Version after bump: $(jq -r '.version' package.json)"
+        echo "new_version=$new_version" >> $GITHUB_ENV
+        echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+    - name: Commit version bump
+      id: commit_version_bump
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        git commit -a -m ${{ steps.bump_version.outputs.new_version }}
+
+    - name: Push version bump
+      id: push_version_bump
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        git push origin

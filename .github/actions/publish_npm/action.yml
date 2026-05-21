@@ -1,0 +1,47 @@
+name: 🚀 Publish
+description: "Publish To Npm"
+
+outputs:
+  published_version:
+    description: "Published Version from package.json"
+    value: ${{ steps.publish.outputs.published_version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: 🚀 Publish to npm
+      id: publish
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+
+        # Get current version from package.json
+        current_version=$(jq -r '.version' package.json)
+        package_name=$(jq -r '.name' package.json)
+
+        # Set registry for @venly scope
+        npm config set @venly:registry https://registry.npmjs.org/
+
+        # Check if version already exists
+        if npm view ${package_name}@${current_version} version &>/dev/null; then
+          echo "Version ${current_version} already exists in npm registry, skipping publish"
+          echo "published_version=${current_version}" >> $GITHUB_ENV
+          echo "published_version=${current_version}" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Publish the npm package (authenticated via OIDC trusted publishing)
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            npm publish --verbose
+        else
+            npm publish --tag $(echo "${{ github.ref }}" | sed 's|refs/heads/||') --verbose
+        fi
+
+        # Push tags
+        git push -f --tags origin HEAD:${{ github.ref_name }}
+
+        # Output the version
+        echo "Published version: ${current_version}"
+        echo "published_version=${current_version}" >> $GITHUB_ENV
+        echo "published_version=${current_version}" >> $GITHUB_OUTPUT

@@ -1,6 +1,6 @@
 {
   "name": "@venly/web3-react-venly",
-  "version": "1.2.1",
+  "version": "1.2.0",
   "description": "Venly connector for Web3-React",
   "type": "commonjs",
   "types": "./dist/index.d.ts",
@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ArkaneNetwork/web3-react-venly"
+    "url": "git+https://github.com/Venly/web3-react-venly"
   },
   "scripts": {
     "prebuild": "rm -rf dist",
@@ -27,7 +27,7 @@
   },
   "homepage": "https://venly.io",
   "dependencies": {
-    "@venly/web3-provider": "^3.1.0",
+    "@venly/web3-provider": "^3.8.0",
     "@web3-react/types": "^8.1.2-beta.0"
   },
   "devDependencies": {
@@ -36,5 +36,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "overrides": {
+    "semver": "^7.5.2"
+  }
 }

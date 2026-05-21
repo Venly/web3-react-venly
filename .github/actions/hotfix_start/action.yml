@@ -1,0 +1,160 @@
+name: "Hotfix Node Applicaton Start"
+description: "Hotfix Node Applicaton Start"
+inputs:
+  token:
+    description: GitHub token for authentication
+    required: true
+  node_version:
+    default: 18.x
+    description: Node Version to use
+runs:
+  using: "composite"
+  steps:
+    - name: Set HOME environment variable 🏠
+      shell: bash
+      run: |
+        echo "🏠 Setting HOME environment variable..."
+        echo "HOME=${{ github.workspace }}" >> $GITHUB_ENV
+
+    - name: Setup Git Credentials 🔑
+      uses: oleksiyrudenko/gha-git-credentials@v2.1.1
+      with:
+        global: false
+        name: ${{ github.actor }}
+        email: ${{ github.actor }}@venly.io
+        actor: ${{ github.actor }}
+        token: ${{ inputs.token }}
+
+    # Checkout code to production branch
+    - name: Checkout production branch
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        echo "🔍 Make sure we are on the production Branch 🔍"
+        git switch main
+
+    - name: Setup Node.js ${{ inputs.node_version }} 📦
+      uses: actions/setup-node@v4
+      id: node_setup
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    # =====================================================
+    # Hotfix
+    # =====================================================
+    # Create hotfix version
+    - name: Bump Version
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        echo "🚀 Bumping the version..."
+        git fetch -p
+        git status
+        npm version prepatch --preid=SNAPSHOT --git-tag-version=false
+
+    # Read package.json for version
+    - name: Read hotfix package version
+      uses: ./.github/actions/read_package_version
+      with:
+        env_var_name: hotfix_version_raw
+
+    # Extract semantic version
+    - name: Extract semantic version
+      shell: bash
+      id: hotfix_version
+      run: |
+        #!/bin/bash
+        set -x
+        RAW_HOTFIX_VERSION=${{ env.hotfix_version_raw }}
+        HOTFIX_VERSION=$(echo $RAW_HOTFIX_VERSION | grep -oP "\d*\.\d*\.\d*")
+        if [ -n "$HOTFIX_VERSION" ]; then
+          echo "hotfix_version=$HOTFIX_VERSION" >> $GITHUB_ENV
+          echo "hotfix_version=$HOTFIX_VERSION" >> $GITHUB_OUTPUT
+          echo $HOTFIX_VERSION
+        else
+          echo "No version found"
+        fi
+
+    - name: Check for existing hotfix branch
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        # Fetch all branches from the remote
+        git fetch --all
+
+        # Check if any branch contains the keyword "hotfix"
+        if git branch -r | grep -q "origin/hotfix"; then
+          echo "Error: A hotfix branch already exists. Please resolve or merge the existing hotfix branch before creating a new one."
+          exit 1
+        else
+          echo "No existing hotfix branch found. Proceeding..."
+        fi
+
+    - name: Create Hotfix Branch
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        git checkout -b hotfix-${{ env.hotfix_version }}
+        git commit -am "Create hotfix version ${{ env.hotfix_version_raw }}"
+        git push origin HEAD:refs/heads/hotfix-${{ env.hotfix_version }}
+
+    # Switch to Development Branch
+    - name: Switch to development branch
+      shell: bash
+      run: |
+        git switch develop
+        git status
+
+    # Read package.json for version
+    - name: Read develop package version
+      uses: ./.github/actions/read_package_version
+      with:
+        env_var_name: current-version-develop
+
+    # Merge Back to develop
+    - name: Merge To Develop Branch 🔄
+      shell: bash
+      run: |
+        #!/bin/bash
+        set -x
+        echo "🔄 Preparing to merge the hotfix branch into develop..."
+        # Checkout develop branch
+        git checkout develop
+
+        # Bump version to match the hotfix version without creating a git tag
+        echo "🔖 Bumping version to match hotfix version..."
+        npm version ${{ env.hotfix_version_raw }} --git-tag-version=false
+        git commit -am "Update develop to hotfix version ${{ env.hotfix_version_raw }} to avoid merge conflicts"
+
+        # Merge the hotfix branch
+        echo "🔀 Merging hotfix-${{ env.hotfix_version }} into develop..."
+        git merge hotfix-${{ env.hotfix_version }} -m "Merge hotfix-${{ env.hotfix_version }} into develop"
+
+        # Bump the develop version back to pre-merge state
+        echo "🔖 Bumping develop version back to pre-merge state..."
+        npm version ${{ env.current-version-develop }} --git-tag-version=false
+        git commit -am "Update develop version back to pre-merge state"
+
+        # Push changes to the develop branch
+        echo "📤 Pushing changes to the develop branch..."
+        git push origin develop
+
+    # =====================================================
+    # Hotfix Flow Info
+    # =====================================================
+    - name: ℹ️ Display Hotfix Process Info
+      shell: bash
+      run: |
+        echo "🚀 Hotfix Process Details 🚀"
+        echo "✨ Workflow Name: ${{ github.workflow }}"
+        echo "👤 Triggered by: ${{ github.actor }}"
+        echo "📦 Repository: ${{ github.repository }}"
+        echo "🔖 Reference: ${{ github.ref }}"
+        echo "🏷️ Hotfix Branch: hotfix-${{ env.hotfix_version }}"
+        echo "🔑 Commit SHA: ${{ github.sha }}"
+        echo "🔢 Run ID: ${{ github.run_id }}"
+        echo "🔢 Run Number: ${{ github.run_number }}"
